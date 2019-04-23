@@ -84,6 +84,21 @@
             margin-right: 8px;
             opacity: 0.7;
         }
+        button {
+            background-color: darkslategrey;
+            border: none;
+            color: white;
+            font-size: 1em;
+            margin-left: 80%;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition-duration: 0.4s;
+        }
+        button:hover {
+            background-color: lightgrey;
+            border-color: grey;
+            color: white;
+        }
     </style>
 </head>
 
@@ -94,6 +109,9 @@
     </header>
 
     <div id='map'></div>
+    <button id="button1">Toggle Legend</button>
+    <br>
+    
 
     <footer>
         <p>STUFF</p>
@@ -1031,7 +1049,9 @@
             var div = L.DomUtil.create('div', 'info legend'),
             grades = [airport, chestnutEast, chestnutWest, cynwyd, foxChase, joint, lansdale, manayunk, media, paoli, trenton, warminster, westTrenton, wilmington, handiYes, handiNo],
             labels = ["Airport Line", "Chestnut Hill East Line", "Chestnut Hill West Line", "Cynwyd Line", "Fox Chase Line", "Glenside Combined Stations", "Lansdale Doylestown Line", "Manayunk Line", "Media Elwyn Line", "Paoli Thorndale Line", "Trenton Line", "Warminster Line", "West Trenton Line", "Wilmington Newark Line", "ADA Accessible Station", "Non-ADA Accessible Station"];
+          
             var colorClub = [airportColor, chestnutEastColor, chestnutWestColor, cynwydColor, foxChaseColor, jointColor, lansdaleColor, manayunkColor, mediaColor, paoliColor, trentonColor, warminsterColor, westTrentonColor, wilmingtonColor, handiYesColor, handiNoColor];
+          
               for (var i = 0; i < grades.length; i++) {
                 div.innerHTML +=
                     '<i style="background:' + colorClub[i] + '"></i> ' + labels[i].toLocaleString()+'<br>';
@@ -1039,7 +1059,31 @@
 
             return div;
         };
-      legend.addTo(map);
+        legend.addTo(map);
+        
+        var showLegend = true;
+        
+        var button = document.getElementById('button1');
+    
+        button.addEventListener('click', function(e) {
+            if (showLegend == true) {
+                map.removeControl(legend);
+                showLegend = false; }
+            else if (showLegend == false) {
+                legend.addTo(map);
+                showLegend = true;}
+   
+        })
+        
+
+        
+        
+        
+
+
+        
+      
+      
         
 
 
