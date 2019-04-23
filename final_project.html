@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8 />
+    <title>SEPTA RR Amenities</title>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+   integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+   crossorigin=""/>
+     <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
+   integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+   crossorigin=""></script>
+
+    <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+    
+    
+    
+    <!-- Esri Leaflet  -->
+    <script src="https://unpkg.com/esri-leaflet@2.2.4/dist/esri-leaflet.js"
+    integrity="sha512-tyPum7h2h36X52O2gz+Pe8z/3l+Y9S1yEUscbVs5r5aEY5dFmP1WWRY/WLLElnFHa+k1JBQZSCDGwEAnm2IxAQ=="
+    crossorigin=""></script>
+    <!-- Esri Leaflet Geocoder -->
+    <link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder@2.2.13/dist/esri-leaflet-geocoder.css"
+    integrity="sha512-v5YmWLm8KqAAmg5808pETiccEohtt8rPVMGQ1jA6jqkWVydV5Cuz3nJ9fQ7ittSxvuqsvI9RSGfVoKPaAJZ/AQ=="
+    crossorigin="">
+    <script src="https://unpkg.com/esri-leaflet-geocoder@2.2.13/dist/esri-leaflet-geocoder.js"
+    integrity="sha512-zdT4Pc2tIrc6uoYly2Wp8jh6EPEWaveqqD3sT0lf5yei19BC1WulGuh5CesB0ldBKZieKGD7Qyf/G0jdSe016A=="
+    crossorigin=""></script>
+
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: whitesmoke;
+            font-family: Lato, sans-serif;
+            color: #0D0000;
+        }
+        header {
+            padding: 6px 10%;
+        }
+        h1 {
+            display: inline-block;
+            margin-bottom: 0;
+            margin-top: 0;
+            color: #001323;
+            font-size: 70px;
+            text-shadow: 3px 2px #4B4949;
+        }
+        h2 {
+            display: inline-block;
+            color: #001323;
+            margin-bottom: 0;
+            margin-top: 0;
+            font-size: 20px;
+        }
+        #map {
+            width: 100%;
+            height: 540px;
+            margin: 10px auto;
+        }
+        footer {
+            padding: 6px 10%;
+            width: 80%;
+        }
+        p {
+            font-size: 1em;
+            color: #001323;
+        }
+        yee {
+            font-size: 2em;
+        }
+        .legend {
+            line-height: 18px;
+            color: #555;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>SEPTA Regional Rail</h1>
+        <h2>Comparing Ridership, Accessibility, & Parking Amenities Across all Regional Rail Stations</h2>
+    </header>
+
+    <div id='map'></div>
+
+    <footer>
+        <p>STUFF</p>
+        <p>Map authored by Christine Salvadore</p>
+        
+    </footer>
+
+    <script src="septa.geojson"></script>
+    <script src="rail.geojson"></script>
+    
+    <script>
+
+      var map = L.map('map', {
+          center: [40,-75.16],
+          zoom: 11
+      });
+      
+      var tiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+           attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+           maxZoom: 15,
+            });
+
+      tiles.addTo(map);
+        
+      var airportColor = '#DD3311';
+      var chestnutEastColor = '#FF5500';
+      var chestnutWestColor = '#BB6611';
+      var cynwydColor = '#FFCC33';
+      var foxChaseColor = '#FFE565';
+      var jointColor = '#DD0033';
+      var lansdaleColor = '#B5FE23';
+      var manayunkColor = '#57F361';
+      var mediaColor = '#35A035';
+      var paoliColor = '#519988';
+      var trentonColor = '#5B72E4';
+      var warminsterColor = '#8076E3';
+      var westTrentonColor = '#663D6A';
+      var wilmingtonColor = '#9D5EA3';
+      var handiYesColor = '#0000ff';
+      var handiNoColor = 'grey';
+        
+      var fillOp = .6;
+      var lineColor = 'grey';
+      var lineWeight = 0.5;
+        
+
+        
+      var railLines = L.geoJson(lines, {
+          style: {
+              color: 'black',
+              weight: 1
+          }
+      }).addTo(map);
+        
+      var airport = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: airportColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : airportFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: airportColor
+                  })
+                  ;
+              });
+          } 
+        }); 
+        
+      var chestnutEast = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: chestnutEastColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : chestnutEastFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: chestnutEastColor
+                  })
+                  ;
+              });
+          } 
+        });
+           
+      var chestnutWest = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: chestnutWestColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : chestnutWestFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: chestnutWestColor
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var cynwyd = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: cynwydColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : cynwydFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: cynwydColor
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var foxChase = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: foxChaseColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : foxChaseFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: foxChaseColor
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var lansdale = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: lansdaleColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : lansdaleFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: lansdaleColor
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var manayunk = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: manayunkColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : manayunkFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: manayunkColor
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var media = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: mediaColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : mediaFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: mediaColor
+                  })
+                  ;
+              });
+          } 
+        });   
+        
+      var paoli = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: paoliColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : paoliFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: paoliColor
+                  })
+                  ;
+              });
+          } 
+        });
+
+      var trenton = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: trentonColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : trentonFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: trentonColor
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var warminster = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: warminsterColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : warminsterFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: warminsterColor
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var westTrenton = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: westTrentonColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : westTrentonFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: westTrentonColor
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var wilmington = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: wilmingtonColor,
+                        fillOpacity: fillOp,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : wilmingtonFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: wilmingtonColor
+                  })
+                  ;
+              });
+          } 
+        });
+
+      var joint = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: jointColor,
+                        fillOpacity: .4,
+                        radius: getRadius(feature.properties.Weekday_Total_Boards)
+                    });   
+          },
+          
+          filter : jointFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+'Glenside Combined'+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: jointColor
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var handiYes = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: handiYesColor,
+                        fillOpacity: 1,
+                        radius: 10
+                    });   
+          },
+          
+          filter : handiYesFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'whitesmoke'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: handiYesColor
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var handiNo = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: handiNoColor,
+                        fillOpacity: 1,
+                        radius: 5
+                    });   
+          },
+          
+          filter : handiNoFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'whitesmoke'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: handiNoColor
+                  })
+                  ;
+              });
+          } 
+        });        
+  
+      var airportPark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(airportColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : airportFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(airportColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        }); 
+        
+      var chestnutEastPark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(chestnutEastColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : chestnutEastFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(chestnutEastColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });
+           
+      var chestnutWestPark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(chestnutWestColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : chestnutWestFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(chestnutWestColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var cynwydPark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(cynwydColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : cynwydFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(cynwydColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var foxChasePark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(foxChaseColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : foxChaseFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(foxChaseColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var lansdalePark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(lansdaleColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : lansdaleFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(lansdaleColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var manayunkPark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(manayunkColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : manayunkFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(manayunkColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var mediaPark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(mediaColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : mediaFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(mediaColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });   
+        
+      var paoliPark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(paoliColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : paoliFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(paoliColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });
+
+      var trentonPark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(trentonColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : trentonFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(trentonColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var warminsterPark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(warminsterColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : warminsterFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(warminsterColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var westTrentonPark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(westTrentonColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : westTrentonFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(westTrentonColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });
+        
+      var wilmingtonPark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(wilmingtonColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: fillOp,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : wilmingtonFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+feature.properties.Line_Name+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(wilmingtonColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });
+
+      var jointPark = L.geoJson(stations, {
+          pointToLayer: function(feature, latlng) { 
+                return L.circleMarker(latlng, { 
+                        color: lineColor,
+                        weight: lineWeight,
+                        fillColor: getColor2(jointColor, feature.properties.Number_of_Daily_Parking_Spaces),
+                        fillOpacity: .4,
+                        radius: getRadius2(feature.properties.Number_of_Daily_Parking_Spaces)
+                    });   
+          },
+          
+          filter : jointFilter,
+                 
+          onEachFeature : function(feature, layer) {
+              layer.on('mouseover', function() {
+                  layer.setStyle({
+                      fillColor: 'grey'
+                  }).bindTooltip('<yee>'+'<b>'+feature.properties.Station_Name.toUpperCase()+'</b></yee><br><b>Line Name: </b>'+'Glenside Combined'+'<br><b>Weekday Boards: </b>'+feature.properties.Weekday_Total_Boards+'<br><b>ADA Accessible: </b>'+feature.properties.ADA_Accessible+'<br><b># of Daily Parking Spaces: </b>'+feature.properties.Number_of_Daily_Parking_Spaces).openTooltip();
+              });
+              layer.on('mouseout', function() {
+                  layer.setStyle({
+                      fillColor: getColor2(jointColor, feature.properties.Number_of_Daily_Parking_Spaces)
+                  })
+                  ;
+              });
+          } 
+        });
+        
+        
+//LAYER GROUPS & CONTROLS
+        
+      var allLines = L.layerGroup([airport, chestnutEast, chestnutWest, cynwyd, foxChase, lansdale, manayunk, media, paoli, trenton, warminster, westTrenton, wilmington, joint]);
+      var handiLines = L.layerGroup([handiYes, handiNo]);
+      var parkLines = L.layerGroup([airportPark, chestnutEastPark, chestnutWestPark, cynwydPark, foxChasePark, lansdalePark, manayunkPark, mediaPark, paoliPark, trentonPark, warminsterPark, westTrentonPark, wilmingtonPark, jointPark]);
+
+        
+/*      var allLayers = {
+          "<b style='color:#DD3311'>Airport Line</b>": airport,
+          "<b style='color:#FF5500'>Chestnut Hill East Line</b>": chestnutEast,
+          "<b style='color:#BB6611'>Chestnut Hill West Line</b>": chestnutWest,
+          "<b style='color:#FFCC33'>Cynwyd Line</b>": cynwyd,
+          "<b style='color:#FFE565'>Fox Chase Line</b>": foxChase,
+          "<b style='color:#B5FE23'>Lansdale Doylestown Line</b>": lansdale,
+          "<b style='color:#57F361'>Manayunk Norristown Line</b>": manayunk,
+          "<b style='color:#35A035'>Media Elwyn Line</b>": media,
+          "<b style='color:#519988'>Paoli Thorndale Line</b>": paoli,
+          "<b style='color:#5B72E4'>Trenton Line</b>": trenton,
+          "<b style='color:#8076E3'>Warminster Line</b>": warminster,
+          "<b style='color:#663D6A'>West Trenton Line</b>": westTrenton,
+          "<b style='color:#9D5EA3'>Wilmington Newark Line</b>": wilmington,
+          "<b style='color:#DD0033''>Combination Stations</b>": joint
+      } */ 
+      var altLayers = {
+          "Ridership": allLines,
+          "Parking Spaces": parkLines,
+          "ADA Accessible": handiLines
+      }
+      var pathways = {
+          "Rail Lines": railLines
+      }
+
+      L.control.layers(altLayers, pathways, {collapsed:false, position: 'topleft'}).addTo(map);     
+      
+        
+//LEGEND CREATION        
+        
+      var legend = L.control({position: 'bottomright'});
+      legend.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'info legend'),
+            grades = [airport, chestnutEast, chestnutWest, cynwyd, foxChase, joint, lansdale, manayunk, media, paoli, trenton, warminster, westTrenton, wilmington, handiYes, handiNo],
+            labels = ["Airport Line", "Chestnut Hill East Line", "Chestnut Hill West Line", "Cynwyd Line", "Fox Chase Line", "Glenside Combined Stations", "Lansdale Doylestown Line", "Manayunk Line", "Media Elwyn Line", "Paoli Thorndale Line", "Trenton Line", "Warminster Line", "West Trenton Line", "Wilmington Newark Line", "ADA Accessible Station", "Non-ADA Accessible Station"];
+            var colorClub = [airportColor, chestnutEastColor, chestnutWestColor, cynwydColor, foxChaseColor, jointColor, lansdaleColor, manayunkColor, mediaColor, paoliColor, trentonColor, warminsterColor, westTrentonColor, wilmingtonColor, handiYesColor, handiNoColor];
+              for (var i = 0; i < grades.length; i++) {
+                div.innerHTML +=
+                    '<i style="background:' + colorClub[i] + '"></i> ' + labels[i].toLocaleString()+'<br>';
+                    }
+
+            return div;
+        };
+      legend.addTo(map);
+        
+
+
+        
+//FILTERS & FUNCTIONS
+        
+    function airportFilter(feature) {
+        if (feature.properties.Line_Name == "Airport Line") 
+            return true;
+            }
+    function chestnutEastFilter(feature) {
+        if (feature.properties.Line_Name == "Chestnut Hill East Line") 
+            return true;
+            }
+    function chestnutWestFilter(feature) {
+        if (feature.properties.Line_Name == "Chestnut Hill West Line") 
+            return true;
+            }        
+    function cynwydFilter(feature) {
+        if (feature.properties.Line_Name == "Cynwyd Line") 
+            return true;
+            }
+    function foxChaseFilter(feature) {
+        if (feature.properties.Line_Name == "Fox Chase Line") 
+            return true;
+            }
+    function jointFilter(feature) {
+        if (feature.properties.Line_Name == "Joint") 
+            return true;
+            }
+    function lansdaleFilter(feature) {
+        if (feature.properties.Line_Name == "Lansdale Doylestown Line") 
+            return true;
+            }
+    function manayunkFilter(feature) {
+        if (feature.properties.Line_Name == "Manayunk Norristown Line") 
+            return true;
+            }
+    function mediaFilter(feature) {
+        if (feature.properties.Line_Name == "Media Elwyn Line") 
+            return true;
+            }
+    function paoliFilter(feature) {
+        if (feature.properties.Line_Name == "Paoli Thorndale Line") 
+            return true;
+            }
+    function trentonFilter(feature) {
+        if (feature.properties.Line_Name == "Trenton Line") 
+            return true;
+            }
+    function warminsterFilter(feature) {
+        if (feature.properties.Line_Name == "Warminster Line") 
+            return true;
+            }
+    function westTrentonFilter(feature) {
+        if (feature.properties.Line_Name == "West Trenton Line") 
+            return true;
+            }
+    function wilmingtonFilter(feature) {
+        if (feature.properties.Line_Name == "Wilmington Newark Line") 
+            return true;
+            }
+    function handiYesFilter(feature) {
+        if (feature.properties.ADA_Accessible == 'Yes')
+            return true;
+            }
+    function handiNoFilter(feature) {
+        if (feature.properties.ADA_Accessible == 'No')
+            return true;
+            }
+    function getRadius(boards) {
+        var radius = Math.sqrt(boards/Math.PI);
+        return radius * .7;
+            }
+    function getRadius2(spaces) {
+        if (spaces == "N/A") {
+            var radius = 3;
+        }
+        else {
+            var radius = Math.sqrt(spaces/Math.PI);
+        }
+        return radius * .7;
+        }
+    function getColor2(color, spaces) {
+        if (spaces == "N/A") {
+            var col = 'grey';
+        }
+        else {
+            var col = color;
+        }
+        return col;
+        }
+        
+        //GEOCODER
+        var searchControl = L.esri.Geocoding.geosearch().addTo(map);
+
+        var results = L.layerGroup().addTo(map);
+
+        searchControl.on('results', function(data){
+            results.clearLayers();
+            for (var i = data.results.length - 1; i >= 0; i--) {
+                results.addLayer(L.marker(data.results[i].latlng))
+                ;
+            }
+        });
+    </script>
+    
+</body>
+
+</html>
