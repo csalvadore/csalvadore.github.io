@@ -114,13 +114,14 @@
     
 
     <footer>
-        <p>STUFF</p>
+        <p>Increasing public transportation ridership can help mitigate congestion on roadways and reduce an individuals carbon footprint. In order to make the switch from a single occupancy vehicle to another transit mode, the new mode must be available, accessible, and reliable. Avialability is relative to how far an individual is willing to travel to connect with the transit mode. Accessibility can be defined many ways, including: physical, monetary, or transit based limitations. The map above highlights ADA accessibility as one of the potential barriors to utilizing transit. The map also highlights parking availability as limitations in spaces may deter some travelers from utilizing a specific station. The Ridership layer is based on the average number of weekday boards at a particular station. SEPTA's Regional Rail system is statistically more reliable than SEPTA's bus network, and thus will be the focus of this web map [<a href='http://www.septa.org/strategic-plan/reports/route-statistics.pdf'>Route Statistics</a>].</p>
         <p>Map authored by Christine Salvadore</p>
         
     </footer>
 
     <script src="data/septa.geojson"></script>
     <script src="data/rail.geojson"></script>
+
     
     <script>
 
@@ -165,6 +166,7 @@
               weight: 1
           }
       }).addTo(map);
+        
         
       var airport = L.geoJson(stations, {
           pointToLayer: function(feature, latlng) { 
@@ -1062,9 +1064,7 @@
         legend.addTo(map);
         
         var showLegend = true;
-        
         var button = document.getElementById('button1');
-    
         button.addEventListener('click', function(e) {
             if (showLegend == true) {
                 map.removeControl(legend);
@@ -1075,18 +1075,6 @@
    
         })
         
-
-        
-        
-        
-
-
-        
-      
-      
-        
-
-
         
 //FILTERS & FUNCTIONS
         
