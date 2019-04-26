@@ -31,8 +31,7 @@
     integrity="sha512-zdT4Pc2tIrc6uoYly2Wp8jh6EPEWaveqqD3sT0lf5yei19BC1WulGuh5CesB0ldBKZieKGD7Qyf/G0jdSe016A=="
     crossorigin=""></script>
 
-    <script type="text/javascript" src="http://www.liedman.net/leaflet-realtime/dist/leaflet-realtime.js"></script>
-    <script src="https://apitest.septa.org/realtime/L.Control.Locate.min.js"></script>
+
     
     
     <style>
@@ -134,18 +133,6 @@
       });
         
         
-
-        
-      var realtime = L.realtime({
-            url: 'http://www3.septa.org/hackathon/RRSchedules/458',
-            crossOrigin: true,
-            type: 'json'
-            }, {
-        interval: 3 * 1000
-        }).addTo(map);
-
-
-    
       
       var tiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
            attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
