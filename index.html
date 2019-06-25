@@ -29,7 +29,14 @@
     crossorigin="">
     <script src="https://unpkg.com/esri-leaflet-geocoder@2.2.13/dist/esri-leaflet-geocoder.js"
     integrity="sha512-zdT4Pc2tIrc6uoYly2Wp8jh6EPEWaveqqD3sT0lf5yei19BC1WulGuh5CesB0ldBKZieKGD7Qyf/G0jdSe016A=="
-    crossorigin=""></script>
+            crossorigin=""></script>
+<!--    <script type="text/javascript" src="http://www.liedman.net/leaflet-realtime/dist/leaflet-realtime.js"></script>
+    
+
+    
+   <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>-->
+    
+    
 
 
     
@@ -125,6 +132,9 @@
     <script src="data/septa.geojson"></script>
     <script src="data/rail.geojson"></script>
 
+    
+    
+
     <script>
 
       var map = L.map('map', {
@@ -168,6 +178,59 @@
               weight: 1
           }
       }).addTo(map);
+        
+        
+      
+
+/*        var test = L.geoJson
+        var realtime = L.realtime({
+            url: 'http://www3.septa.org/hackathon/TrainView/?_=1556659252853',
+            crossOrigin: true,
+            type: 'json'
+                }, 
+                    {
+            interval: 3 * 1000});*/
+   
+/*function Get(yourUrl){
+    var Httpreq = new XMLHttpRequest(); // a new request
+    Httpreq.open("GET",yourUrl,false);
+    Httpreq.send(null);
+    return Httpreq.responseText;          
+}
+        
+var help = Get("https://www3.septa.org/hackathon/TrainView/");*/
+        
+        //var help = $.getJSON("https://www3.septa.org/hackathon/TrainView/", function(data) { 
+                    //addDataToMap(data, map); 
+                    
+         //           });
+        
+
+
+/*        function dictionary(list) {
+            var map = {};
+            for (var i = 0; i < list.length; ++i) {
+                var category = list[i].category;
+                if (!map[category]) 
+                    map[category] = [];
+                //map[category].push(list[i].name);  // add product names only
+                map[category].push(list[i]);    // add complete products
+            }
+            return map;
+        }
+        var d = dictionary(realtime);
+        console.log(d);*/
+
+
+
+        
+        
+        
+        
+        
+        
+        
+        
                
       var airport = L.geoJson(stations, {
           pointToLayer: function(feature, latlng) { 
@@ -1055,7 +1118,7 @@
       legend.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'info legend'),
             grades = [airport, chestnutEast, chestnutWest, cynwyd, foxChase, joint, lansdale, manayunk, media, paoli, trenton, warminster, westTrenton, wilmington, handiYes, handiNo],
-            labels = ["Airport Line", "Chestnut Hill East Line", "Chestnut Hill West Line", "Cynwyd Line", "Fox Chase Line", "Glenside Combined Stations", "Lansdale Doylestown Line", "Manayunk Line", "Media Elwyn Line", "Paoli Thorndale Line", "Trenton Line", "Warminster Line", "West Trenton Line", "Wilmington Newark Line", "ADA Accessible Station", "Non-ADA Accessible Station"];
+            labels = ["Airport Line", "Chestnut Hill East", "Chestnut Hill West", "Cynwyd Line", "Fox Chase Line", "Glenside Combined", "Lansdale Doylestown", "Manayunk", "Media Elwyn", "Paoli Thorndale", "Trenton", "Warminster", "West Trenton", "Wilmington Newark", "ADA Accessible", "Non-ADA Accessible"];
           
             var colorClub = [airportColor, chestnutEastColor, chestnutWestColor, cynwydColor, foxChaseColor, jointColor, lansdaleColor, manayunkColor, mediaColor, paoliColor, trentonColor, warminsterColor, westTrentonColor, wilmingtonColor, handiYesColor, handiNoColor];
           
@@ -1078,10 +1141,9 @@
                 legend.addTo(map);
                 showLegend = true;}
    
-        })
+        });
         
 
-        
     
 
         
@@ -1174,7 +1236,7 @@
         return col;
         }
         
-        //GEOCODER
+//GEOCODER
         var searchControl = L.esri.Geocoding.geosearch().addTo(map);
 
         var results = L.layerGroup().addTo(map);
@@ -1189,6 +1251,10 @@
         map.on('click', function(e) {
             results.clearLayers();
         });
+        
+        
+
+        
     </script>
     
 </body>
